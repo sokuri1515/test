@@ -1,0 +1,33 @@
+# Telegram Summarizer Configuration
+
+# Telegram channels to monitor
+# Use channel username (without @) or channel ID
+channels:
+  - channel_username_1
+  - channel_username_2
+  # - -1001234567890  # channel ID example
+
+# Schedule settings
+schedule:
+  # Interval in minutes between each summary cycle
+  interval_minutes: 60
+  # Maximum number of messages to fetch per channel per cycle
+  max_messages_per_channel: 50
+
+# Summarizer settings
+summarizer:
+  # Claude model to use
+  model: "claude-sonnet-4-5-20250929"
+  # Maximum tokens for summary response
+  max_tokens: 4096
+  # Language for summaries
+  language: "ko"
+
+# Output settings
+output:
+  # Send summary via Telegram bot
+  telegram: true
+  # Save summary as markdown file (for future Zettelkasten integration)
+  markdown: false
+  # Directory for markdown files
+  markdown_dir: "summaries"
