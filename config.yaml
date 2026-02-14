@@ -16,8 +16,13 @@ schedule:
 
 # Summarizer settings
 summarizer:
-  # Claude model to use
-  model: "claude-sonnet-4-5-20250929"
+  # LLM provider: "claude", "openai", "gemini"
+  provider: "claude"
+  # Model ID (leave empty to use provider default)
+  #   claude  → claude-sonnet-4-5-20250929
+  #   openai  → gpt-4o
+  #   gemini  → gemini-2.0-flash
+  model: null
   # Maximum tokens for summary response
   max_tokens: 4096
   # Language for summaries

@@ -46,7 +46,8 @@ async def run_cycle(
     # Step 2: Summarize
     summary = summarize(
         channel_messages=channel_messages,
-        model=summarizer_cfg.get("model", "claude-sonnet-4-5-20250929"),
+        provider=summarizer_cfg.get("provider", "claude"),
+        model=summarizer_cfg.get("model"),
         max_tokens=summarizer_cfg.get("max_tokens", 4096),
         language=summarizer_cfg.get("language", "ko"),
     )

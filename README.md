@@ -1,11 +1,13 @@
 # Telegram Channel Summarizer
 
-Telegram 채널의 메시지를 주기적으로 수집하고, Claude API로 요약한 뒤 Telegram Bot으로 전송하는 도구입니다.
+Telegram 채널의 메시지를 주기적으로 수집하고, LLM API로 요약한 뒤 Telegram Bot으로 전송하는 도구입니다.
+
+**지원 LLM**: Claude / ChatGPT / Gemini — `config.yaml`에서 한 줄로 교체 가능
 
 ## 동작 방식
 
 ```
-Telegram 채널 → 메시지 수집 (Telethon) → 요약 (Claude API) → Telegram Bot 전송
+Telegram 채널 → 메시지 수집 (Telethon) → 요약 (LLM) → Telegram Bot 전송
 ```
 
 ## 사전 준비
@@ -17,6 +19,10 @@ Telegram 채널 → 메시지 수집 (Telethon) → 요약 (Claude API) → Tele
 | Telegram API ID / Hash | https://my.telegram.org |
 | Telegram Bot Token | Telegram에서 @BotFather와 대화 |
 | Anthropic API Key | https://console.anthropic.com |
+| OpenAI API Key | https://platform.openai.com/api-keys |
+| Google Gemini API Key | https://aistudio.google.com/apikey |
+
+> LLM API 키는 **사용할 provider의 것만** 있으면 됩니다.
 
 ### 2. Bot을 채팅방에 추가
 
@@ -34,9 +40,40 @@ cp .env.example .env
 # .env 파일을 열어 API 키 입력
 ```
 
-## 설정
+## LLM Provider 설정
 
-`config.yaml`에서 모니터링할 채널과 동작 옵션을 설정합니다:
+`config.yaml`의 `summarizer.provider`를 변경하면 요약에 사용할 모델을 교체할 수 있습니다:
+
+```yaml
+# Claude 사용 (기본값)
+summarizer:
+  provider: "claude"
+  model: null                        # 기본: claude-sonnet-4-5-20250929
+
+# ChatGPT로 변경
+summarizer:
+  provider: "openai"
+  model: null                        # 기본: gpt-4o
+  # model: "gpt-4o-mini"             # 또는 특정 모델 지정
+
+# Gemini로 변경
+summarizer:
+  provider: "gemini"
+  model: null                        # 기본: gemini-2.0-flash
+  # model: "gemini-2.5-pro-preview"  # 또는 특정 모델 지정
+```
+
+| Provider | 기본 모델 | 환경변수 |
+|----------|-----------|----------|
+| `claude` | `claude-sonnet-4-5-20250929` | `ANTHROPIC_API_KEY` |
+| `openai` | `gpt-4o` | `OPENAI_API_KEY` |
+| `gemini` | `gemini-2.0-flash` | `GEMINI_API_KEY` |
+
+`model` 을 `null`로 두면 각 provider의 기본 모델이 사용됩니다. 특정 모델을 쓰고 싶으면 모델 ID를 직접 지정하세요.
+
+## 채널 설정
+
+`config.yaml`에서 모니터링할 채널을 설정합니다:
 
 ```yaml
 channels:
@@ -69,10 +106,31 @@ python main.py --once
 ├── .env.example         # 환경 변수 템플릿
 ├── src/
 │   ├── reader.py        # Telegram 채널 메시지 수집
-│   ├── summarizer.py    # Claude API 요약 생성
+│   ├── summarizer.py    # LLM 요약 (provider 선택)
 │   ├── sender.py        # 요약 결과 전송 (Bot / Markdown)
-│   └── scheduler.py     # 주기적 실행 관리
+│   ├── scheduler.py     # 주기적 실행 관리
+│   └── providers/       # LLM Provider 구현
+│       ├── __init__.py  # 베이스 클래스 + 팩토리
+│       ├── claude.py    # Anthropic Claude
+│       ├── openai.py    # OpenAI ChatGPT
+│       └── gemini.py    # Google Gemini
 └── data/                # 세션 파일 및 상태 저장 (git 제외)
+```
+
+## 새 Provider 추가하기
+
+1. `src/providers/`에 새 파일 생성 (예: `my_llm.py`)
+2. `LLMProvider`를 상속하고 `generate()` 메서드 구현
+3. `src/providers/__init__.py`의 `get_provider()`에 등록
+
+```python
+# src/providers/my_llm.py
+from src.providers import LLMProvider
+
+class MyLLMProvider(LLMProvider):
+    def generate(self, prompt: str, model: str, max_tokens: int) -> str:
+        # 여기에 API 호출 구현
+        ...
 ```
 
 ## 향후 계획

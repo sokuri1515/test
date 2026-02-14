@@ -1,11 +1,17 @@
-"""Summarize collected messages using Claude API."""
+"""Summarize collected messages using a configurable LLM provider."""
 
 import logging
-import os
 
-import anthropic
+from src.providers import LLMProvider, get_provider
 
 logger = logging.getLogger(__name__)
+
+# Default models per provider (used when model is not specified in config)
+DEFAULT_MODELS: dict[str, str] = {
+    "claude": "claude-sonnet-4-5-20250929",
+    "openai": "gpt-4o",
+    "gemini": "gemini-2.0-flash",
+}
 
 
 def _build_prompt(channel_messages: dict[str, list[dict]], language: str) -> str:
@@ -48,15 +54,17 @@ def _build_prompt(channel_messages: dict[str, list[dict]], language: str) -> str
 
 def summarize(
     channel_messages: dict[str, list[dict]],
-    model: str = "claude-sonnet-4-5-20250929",
+    provider: str = "claude",
+    model: str | None = None,
     max_tokens: int = 4096,
     language: str = "ko",
 ) -> str | None:
-    """Summarize messages using Claude API.
+    """Summarize messages using the configured LLM provider.
 
     Args:
         channel_messages: Dict of channel name -> list of message dicts.
-        model: Claude model ID to use.
+        provider: Provider name ("claude", "openai", "gemini").
+        model: Model ID. If None, uses the default for the provider.
         max_tokens: Maximum tokens for the response.
         language: Language code for the summary.
 
@@ -68,15 +76,12 @@ def summarize(
         logger.info("No messages to summarize.")
         return None
 
-    client = anthropic.Anthropic(api_key=os.environ["ANTHROPIC_API_KEY"])
+    if model is None:
+        model = DEFAULT_MODELS.get(provider, "")
 
-    logger.info("Requesting summary from Claude (%s)...", model)
-    response = client.messages.create(
-        model=model,
-        max_tokens=max_tokens,
-        messages=[{"role": "user", "content": prompt}],
-    )
+    llm: LLMProvider = get_provider(provider)
+    logger.info("Requesting summary from %s (%s)...", provider, model)
 
-    summary = response.content[0].text
+    summary = llm.generate(prompt=prompt, model=model, max_tokens=max_tokens)
     logger.info("Summary generated (%d chars).", len(summary))
     return summary
