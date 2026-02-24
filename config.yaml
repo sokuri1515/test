@@ -3,14 +3,14 @@
 # Telegram channels to monitor
 # Use channel username (without @) or channel ID
 channels:
-  - channel_username_1
-  - channel_username_2
+  - bornlupin
+  - aetherjapanresearch
   # - -1001234567890  # channel ID example
 
 # Schedule settings
 schedule:
-  # Interval in minutes between each summary cycle
-  interval_minutes: 60
+  # Fixed hours to run summarization (24h format)
+  scheduled_hours: [4, 8, 12, 16, 20, 0]
   # Maximum number of messages to fetch per channel per cycle
   max_messages_per_channel: 50
 

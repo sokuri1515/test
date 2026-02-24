@@ -74,18 +74,19 @@ async def main(run_once: bool = False) -> None:
 
     config = load_config()
     logger.info(
-        "Loaded config: %d channels, %d min interval",
+        "Loaded config: %d channels, scheduled hours: %s",
         len(config["channels"]),
-        config["schedule"]["interval_minutes"],
+        config["schedule"].get("scheduled_hours", []),
     )
 
     # Create clients
     user_client = create_client()
     bot_client = create_bot_client()
 
-    async with user_client, bot_client:
-        # Start the bot client with its token
-        await bot_client.start(bot_token=bot_client._bot_token)
+    bot_token = bot_client._bot_token
+    await bot_client.start(bot_token=bot_token)
+
+    async with user_client:
         # User client will prompt for phone/code on first run
         await user_client.start()
 
